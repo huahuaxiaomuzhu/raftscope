@@ -32,6 +32,7 @@ replay = function(name, done) {
 state = makeState({
   servers: [],
   messages: [],
+  debugLogs:[]
 });
 
 var sliding = false;
@@ -398,7 +399,15 @@ render.logs = function() {
     }
   });
 };
-
+render.debugLogs=function () {
+  var debugListDom=$('#debug-log');
+  debugListDom.empty();
+  state.current.debugLogs.forEach(function (log, index) {
+    var liDom =$('<li></li>')
+    liDom.attr('id','log-'+index).append(log)
+    debugListDom.append(liDom)
+  })
+}
 render.messages = function(messagesSame) {
   var messagesGroup = $('#messages', svg);
   if (!messagesSame) {
@@ -621,6 +630,7 @@ render.update = function() {
   render.clock();
   render.servers(serversSame);
   render.messages(messagesSame);
+  render.debugLogs();
   if (!serversSame)
     render.logs();
 };

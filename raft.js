@@ -24,8 +24,17 @@ var BATCH_SIZE = 3;
     //TODO 加入消息丢失的模拟
     if(Math.random()>0.1){
       model.messages.push(message);
+      model.debugLogs.unshift(`${JSON.stringify(message)} transferred successfully`)
+      if (model.debugLogs.length>9){
+        model.debugLogs.splice(-1,1);
+      }
     }else{
       model.messages.push({});
+      model.debugLogs.unshift(`${JSON.stringify(message)} missed!`)
+      if (model.debugLogs.length>9){
+        model.debugLogs.splice(-1,1);
+      }
+
     }
   };
 
@@ -190,10 +199,11 @@ var BATCH_SIZE = 3;
   //处理拉票响应
   var handleRequestVoteReply = function(model, server, reply) {
     if (server.term < reply.term)
-      stepDown(model, server, reply.term); //如果接收到的 RPC 请求或响应中，任期号T > currentTerm，则令 currentTerm = T，并切换为跟随者状态（5.1 节）
+      stepDown(model, server, reply.term);
+    //如果接收到的 RPC 请求或响应中，任期号T > currentTerm，则令 currentTerm = T，并切换为跟随者状态（5.1 节）
     if (server.state == 'candidate' &&
         server.term == reply.term) {
-      server.rpcDue[reply.from] = util.Inf;
+      server.rpcDue[reply.from] = util.Inf; //收到reply代表的选票结果,暂时不允许RPC超时
       server.voteGranted[reply.from] = reply.granted;
     }
   };

@@ -29,6 +29,7 @@ var makeState = function(initial) {
   };
   var self = {
     current: initial,
+
     getMaxTime: function() {
       return maxTime;
     },
