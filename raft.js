@@ -22,15 +22,15 @@ var BATCH_SIZE = 3;
         MIN_RPC_LATENCY +
         Math.random() * (MAX_RPC_LATENCY - MIN_RPC_LATENCY); //在min~max中随机
     //TODO 加入消息丢失的模拟
-    if(Math.random()>0.1){
+    if(Math.random()>0.05){
       model.messages.push(message);
-      model.debugLogs.unshift(`${JSON.stringify(message)} transferred successfully`)
+      // model.debugLogs.unshift(`${JSON.stringify(message)} transferred successfully`)
       if (model.debugLogs.length>9){
         model.debugLogs.splice(-1,1);
       }
     }else{
       model.messages.push({});
-      model.debugLogs.unshift(`${JSON.stringify(message)} missed!`)
+      model.debugLogs.unshift(`${message.type} ${message.direction} from ${message.from} to ${message.to}  missed!`)
       if (model.debugLogs.length>9){
         model.debugLogs.splice(-1,1);
       }
@@ -101,6 +101,7 @@ var BATCH_SIZE = 3;
   rules.startNewElection = function(model, server) {
     if ((server.state == 'follower' || server.state == 'candidate') &&
         server.electionAlarm <= model.time) {
+      model.debugLogs.unshift(`${server.id} started election at ${model.time}`);
       server.electionAlarm = makeElectionAlarm(model.time);
       server.term += 1;
       server.votedFor = server.id;
@@ -116,6 +117,7 @@ var BATCH_SIZE = 3;
   rules.sendRequestVote = function(model, server, peer) {
     if (server.state == 'candidate' &&
         server.rpcDue[peer] <= model.time) {
+      model.debugLogs.unshift(`${server.id} want ${peer} to vote for him`);
       server.rpcDue[peer] = model.time + RPC_TIMEOUT; //重置RPC超时计时器
       sendRequest(model, {
         from: server.id,
@@ -133,6 +135,7 @@ var BATCH_SIZE = 3;
       //拿到了超过半数的票
       //!!如果掉线节点大于全部节点的一半的话就永远无法选出leader，所以raft在极限情况下只能容忍半数节点宕机
       //console.log('server ' + server.id + ' is leader in term ' + server.term);
+      model.debugLogs.unshift(`${server.id} become new leader`)
       server.state = 'leader';
       server.nextIndex    = util.makeMap(server.peers, server.log.length + 1);
       server.rpcDue       = util.makeMap(server.peers, util.Inf);
