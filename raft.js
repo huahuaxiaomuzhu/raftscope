@@ -242,6 +242,8 @@ var BATCH_SIZE = 3;
     server.counter=server.log.reduce((previousValue, currentValue, currentIndex, array)=>{
       if(currentValue.value==='i'){
         return previousValue+1;
+      }else {
+        return previousValue;
       }
     },0);
     sendReply(model, request, {
@@ -383,6 +385,8 @@ var BATCH_SIZE = 3;
     server.counter=server.log.reduce((previousValue, currentValue, currentIndex, array)=>{
       if(currentValue.value==='i'){
         return previousValue+1;
+      }else{
+        return previousValue;
       }
     },0);
     model.debugLogs.unshift(`${server.id}'s counter is ${server.counter}`);
