@@ -7,4 +7,4 @@ also makes for a good space heater while your browser continuously re-parses and
 after you clone, run the following to get the dependencies:
     git submodule update --init --recursive
 
-TODO :将追随者的request 重定向到 leader
+TODO :将追随者的request 重定向到 leader FINISHED

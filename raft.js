@@ -340,8 +340,13 @@ var BATCH_SIZE = 3;
 
   raft.clientRequest = function(model, server) {
     if (server.state == 'leader') {
+      model.debugLogs.unshift(`leader ${server.id} received client request`);
       server.log.push({term: server.term,
         value: 'v'});
+    }else{
+      model.debugLogs.unshift(`follower ${server.id} received client request,redirecting to leader ${server.votedFor} `);
+      model.servers[server.votedFor-1].log.push({term: server.term,
+        value: 'v'})
     }
   };
 
