@@ -339,6 +339,12 @@ var BATCH_SIZE = 3;
   };
 
   raft.clientRequest = function(model, server) {
+    if (server.state==='follower'){
+      if (server.term===0){
+        model.debugLogs.unshift(`system has not elected a leader yet,please wait`);
+        return;
+      }
+    }
     if (server.state == 'leader') {
       model.debugLogs.unshift(`leader ${server.id} received client request`);
       server.log.push({term: server.term,
