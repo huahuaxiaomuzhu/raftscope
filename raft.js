@@ -81,6 +81,7 @@ var BATCH_SIZE = 3;
       nextIndex:    util.makeMap(peers, 1), //只有当我是领导人的时候才有效
       rpcDue:       util.makeMap(peers, 0), //对每个节点的rpc超时计时器
       heartbeatDue: util.makeMap(peers, 0), //对每个节点的心跳超时计时器
+      counter: 0, //用于实现increase and query
     };
   };
   //如果接收到的 RPC 请求或响应中，任期号T > currentTerm，则令 currentTerm = T，并切换为跟随者状态（5.1 节）
@@ -90,6 +91,7 @@ var BATCH_SIZE = 3;
     server.votedFor = null;
     if (server.electionAlarm <= model.time || server.electionAlarm == util.Inf) {
       server.electionAlarm = makeElectionAlarm(model.time);
+      model.debugLogs.unshift(`${server.id} step down`);
       /*
       （作为一个追随者）如果在超过选举超时时间的情况之前没有收到当前领导人（
       即该领导人的任期需与这个跟随者的当前任期相同）的心跳/附加日志，
@@ -237,6 +239,11 @@ var BATCH_SIZE = 3;
             request.commitIndex);
       }
     }
+    server.counter=server.log.reduce((previousValue, currentValue, currentIndex, array)=>{
+      if(currentValue.value==='i'){
+        return previousValue+1;
+      }
+    },0);
     sendReply(model, request, {
       term: server.term,
       success: success,
@@ -355,7 +362,31 @@ var BATCH_SIZE = 3;
         value: 'v'})
     }
   };
-
+  raft.increase=function(model, server) {
+    if (server.state==='follower'){
+      if (server.term===0){
+        model.debugLogs.unshift(`system has not elected a leader yet,please wait`);
+        return;
+      }
+    }
+    if (server.state == 'leader') {
+      model.debugLogs.unshift(`leader ${server.id} received client request`);
+      server.log.push({term: server.term,
+        value: 'i'});
+    }else{
+      model.debugLogs.unshift(`follower ${server.id} received client request,redirecting to leader ${server.votedFor} `);
+      model.servers[server.votedFor-1].log.push({term: server.term,
+        value: 'i'})
+    }
+  };
+  raft.query=function(model, server) {
+    server.counter=server.log.reduce((previousValue, currentValue, currentIndex, array)=>{
+      if(currentValue.value==='i'){
+        return previousValue+1;
+      }
+    },0);
+    model.debugLogs.unshift(`${server.id}'s counter is ${server.counter}`);
+  };
   raft.spreadTimers = function(model) {
     var timers = [];
     model.servers.forEach(function(server) {

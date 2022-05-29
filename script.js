@@ -219,6 +219,8 @@ var serverActions = [
   ['restart', raft.restart],
   ['time out', raft.timeout],
   ['request', raft.clientRequest],
+    ['increase',raft.increase],
+    ['query',raft.query]
 ];
 
 var messageActions = [
